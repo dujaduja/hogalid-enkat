@@ -781,7 +781,9 @@ function getLeaderData(name, year) {
 const A = {};
 // Hash av "namn|kod" för varje spelares personliga länk.
 // Själva koderna finns inte i filen, så de går inte att läsa ut härifrån.
+const TESTSPELARE = 'test';
 const GILTIGA_LANKAR = [
+  'd956b40f', // Test, kod test
   'c6b48c35',
   '6479b550',
   '5b5c38de',
@@ -926,6 +928,7 @@ function selectSingle(el, key) {
 async function submitSurvey() {
   harvestScreen(12); harvestScreen(7);
   A.timestamp = new Date().toISOString();
+  if (String(A.name || '').trim().toLowerCase() === TESTSPELARE) A.test = true;
   A.year = new Date().getFullYear();
   A.round = getCurrentRound();
 
@@ -1007,6 +1010,12 @@ function svarsar(r) {
   return r.year || (r.timestamp ? new Date(r.timestamp).getFullYear() : 0);
 }
 let dolda_dubbletter = 0;
+let antal_testsvar = 0;
+let visa_testsvar = false;
+function arTestsvar(r) {
+  return !!r && (r.test === true || String(r.name || '').trim().toLowerCase() === TESTSPELARE);
+}
+function toggleTestsvar() { visa_testsvar = !visa_testsvar; renderDash(); }
 function dedupe(rows) {
   const senaste = new Map();
   const utan_namn = [];
@@ -1036,14 +1045,41 @@ async function loadAllFromServer() {
     });
     if (!resp.ok) return null;
     const rows = await resp.json();
-    return rows.map(r => r.data);
+    return rows.map(r => Object.assign({}, r.data, { _id: r.id }));
   } catch(e) { return null; }
 }
-function clearData() {
-  if (confirm('Är du säker på att du vill radera ALL data? Det går inte att ångra.')) {
-    localStorage.removeItem(STORAGE_KEY);
-    renderDash();
-  }
+async function raderaFranServern(ids) {
+  const rena = ids.filter(v => v !== undefined && v !== null);
+  if (!rena.length) return true;
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/svar?id=in.(' + rena.join(',') + ')', {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    return resp.ok;
+  } catch (e) { return false; }
+}
+
+async function raderaTestsvar() {
+  const test = loadAll().filter(arTestsvar);
+  if (!test.length) { alert('Det finns inga testsvar att radera.'); return; }
+  if (!confirm('Radera ' + test.length + ' testsvar permanent? Riktiga svar rörs inte.')) return;
+  const ok = await raderaFranServern(test.map(r => r._id));
+  const kvar = loadAll().filter(r => !arTestsvar(r));
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(kvar)); } catch (e) {}
+  if (!ok) alert('Kunde inte nå servern. Testsvaren kan komma tillbaka nästa gång du laddar om.');
+  renderDash();
+}
+
+async function clearData() {
+  const alla = loadAll();
+  if (!alla.length) { alert('Det finns ingen data att radera.'); return; }
+  if (!confirm('Radera ALLA ' + alla.length + ' svar permanent, också från servern? Det går inte att ångra.')) return;
+  if (!confirm('Helt säker? Alla spelares svar försvinner för gott.')) return;
+  const ok = await raderaFranServern(alla.map(r => r._id));
+  localStorage.removeItem(STORAGE_KEY);
+  if (!ok) alert('Kunde inte nå servern. Svaren kan komma tillbaka nästa gång du laddar om.');
+  renderDash();
 }
 
 let activeYear = new Date().getFullYear();
@@ -1053,7 +1089,9 @@ async function renderDash() {
   if (serverData) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serverData)); } catch(e) {}
   }
-  const all = dedupe(loadAll());
+  const rader = loadAll();
+  antal_testsvar = rader.filter(arTestsvar).length;
+  const all = dedupe(visa_testsvar ? rader : rader.filter(r => !arTestsvar(r)));
   if (!all.length) {
     document.getElementById('year-tabs').innerHTML = '';
     document.getElementById('dash-content').innerHTML = '<div class="no-data">Inga svar ännu. Dela enkäten med spelarna! ⚽</div>';
@@ -1113,6 +1151,14 @@ function renderYear(data, all, year) {
     {key:'q11', label:'Fortsätta', emoji:'🔮'},
   ];
   let kpiHtml = '';
+  if (antal_testsvar > 0) {
+    kpiHtml += '<div style="background:#eaf0f9;border:1.5px solid #c8d4e5;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;font-weight:600;color:var(--green-dark);display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+      '<span>🧪 ' + antal_testsvar + (antal_testsvar === 1 ? ' testsvar' : ' testsvar') + ' ' + (visa_testsvar ? 'visas i statistiken' : 'räknas inte med') + '.</span>' +
+      '<button onclick="toggleTestsvar()" style="background:#dde6f4;border:none;border-radius:99px;padding:5px 12px;font-family:\'Quicksand\',sans-serif;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">' +
+      (visa_testsvar ? 'Dölj testsvar' : 'Visa testsvar') + '</button>' +
+      '<button onclick="raderaTestsvar()" style="background:#fff3e0;border:none;border-radius:99px;padding:5px 12px;font-family:\'Quicksand\',sans-serif;font-size:12px;font-weight:700;color:#e67e22;cursor:pointer;">Radera testsvar</button>' +
+      '</div>';
+  }
   if (dolda_dubbletter > 0) {
     kpiHtml += '<div style="background:#fff9e6;border:1.5px solid #f0d98a;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;color:#7a5c00;">' +
       'ℹ️ ' + dolda_dubbletter + (dolda_dubbletter === 1 ? ' dubblett dold' : ' dubbletter dolda') +
@@ -1374,7 +1420,7 @@ function wellbeingIndex(r) {
 }
 
 function showPlayerPage(name) {
-  const all = dedupe(loadAll());
+  const all = dedupe(loadAll().filter(r => visa_testsvar || !arTestsvar(r)));
   const playerRecs = all.filter(r => r.name === name).sort((a,b)=>(a.year||0)-(b.year||0));
   if (!playerRecs.length) return;
   document.getElementById('coach-dash').style.display = 'none';
