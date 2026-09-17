@@ -969,6 +969,31 @@ function backToSurvey() {
   document.getElementById('survey-section').style.display = 'block';
 }
 
+// Ett svar per spelare, år och omgång. Senaste inskickade vinner.
+// Råsvaren rörs aldrig, varken i localStorage eller i Supabase.
+function svarstid(r) {
+  const t = Date.parse(r && r.timestamp ? r.timestamp : '');
+  return isNaN(t) ? 0 : t;
+}
+function svarsar(r) {
+  return r.year || (r.timestamp ? new Date(r.timestamp).getFullYear() : 0);
+}
+let dolda_dubbletter = 0;
+function dedupe(rows) {
+  const senaste = new Map();
+  const utan_namn = [];
+  (rows || []).forEach(r => {
+    const namn = (r && r.name ? String(r.name) : '').trim();
+    if (!namn) { utan_namn.push(r); return; }
+    const nyckel = namn.toLowerCase() + '|' + svarsar(r) + '|' + (r.round || 1);
+    const fore = senaste.get(nyckel);
+    if (!fore || svarstid(r) >= svarstid(fore)) senaste.set(nyckel, r);
+  });
+  const kvar = [...senaste.values(), ...utan_namn];
+  dolda_dubbletter = (rows || []).length - kvar.length;
+  return kvar;
+}
+
 function loadAll() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
 }
@@ -1000,7 +1025,7 @@ async function renderDash() {
   if (serverData) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serverData)); } catch(e) {}
   }
-  const all = loadAll();
+  const all = dedupe(loadAll());
   if (!all.length) {
     document.getElementById('year-tabs').innerHTML = '';
     document.getElementById('dash-content').innerHTML = '<div class="no-data">Inga svar ännu. Dela enkäten med spelarna! ⚽</div>';
@@ -1059,7 +1084,13 @@ function renderYear(data, all, year) {
     {key:'q7', label:'Delaktighet', emoji:'🗣️'},
     {key:'q11', label:'Fortsätta', emoji:'🔮'},
   ];
-  let kpiHtml = '<div class="stat-grid">';
+  let kpiHtml = '';
+  if (dolda_dubbletter > 0) {
+    kpiHtml += '<div style="background:#fff9e6;border:1.5px solid #f0d98a;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;color:#7a5c00;">' +
+      'ℹ️ ' + dolda_dubbletter + (dolda_dubbletter === 1 ? ' dubblett dold' : ' dubbletter dolda') +
+      '. Om någon svarat flera gånger räknas bara det senaste svaret.</div>';
+  }
+  kpiHtml += '<div class="stat-grid">';
   kpiKeys.forEach(({key, label, emoji}) => {
     const curAvg = avg(data.map(r => r[key]));
     const prevAvg = avg(prevData.map(r => r[key]));
@@ -1315,7 +1346,7 @@ function wellbeingIndex(r) {
 }
 
 function showPlayerPage(name) {
-  const all = loadAll();
+  const all = dedupe(loadAll());
   const playerRecs = all.filter(r => r.name === name).sort((a,b)=>(a.year||0)-(b.year||0));
   if (!playerRecs.length) return;
   document.getElementById('coach-dash').style.display = 'none';
