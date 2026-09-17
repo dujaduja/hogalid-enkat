@@ -807,7 +807,7 @@ function getLeaderData(name, year) {
 }
 
 const A = {};
-const TOTAL = 17;
+const TOTAL = 15;
 
 document.getElementById('season-label').textContent = 'Säsong ' + new Date().getFullYear();
 
@@ -855,7 +855,9 @@ function updateProgress(n) {
     return;
   }
   // Map screen IDs to sequential progress positions
-  const screenOrder = {'0':0,'1':1,'2':2,'3':3,'4':4,'4b':5,'5':6,'6':7,'7':8,'8':9,'8b':10,'9':11,'9b':12,'9c':13,'10':14,'10b':15,'11':16,'12':17};
+  // Map each screen to the question number shown in its q-tag (or closest equivalent)
+  // s0=namn(0), s1=Q1, s2=Q2, s3=Q3, s4=Q4, s4b=Q5, s5=Q6, s6=Q7, s7=Q8, s8=Q9, s8b=Q9.5(visas ej), s9=Q10, s9b=Q11, s9c=Q12, s10=Q13, s10b=NPS(visas ej), s11=Q14, s12=Q15
+  const screenOrder = {'0':0,'1':1,'2':2,'3':3,'4':4,'4b':5,'5':6,'6':7,'7':8,'8':9,'8b':9,'9':10,'9b':11,'9c':12,'10':13,'10b':13,'11':14,'12':15};
   const nNum = screenOrder[String(n)] !== undefined ? screenOrder[String(n)] : Number(n);
   if (nNum > TOTAL) {
     document.getElementById('prog-fill').style.width = '100%';
