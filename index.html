@@ -223,15 +223,12 @@ transition: border-color 0.2s, background 0.2s;
 <div class="container">
 
 <!-- S0 NAMN – visas bara om ingen URL-parameter finns -->
-<div class="screen" id="s0">
-  <div class="section-label">Om dig</div>
-  <div class="card">
-    <div class="q-tag">👋 Börja här</div>
-    <div class="q-text">Vad heter du?</div>
-    <div class="q-hint">Dina svar läses bara av dina tränare.</div>
-    <input class="name-field" id="inp-name" type="text" placeholder="Skriv ditt namn..." maxlength="60" autocomplete="off" onkeydown="if(event.key==='Enter')go(0,1)">
+<div class="screen" id="s-last">
+  <div class="card" style="text-align:center;">
+    <div style="font-size:52px;margin-bottom:10px;">🔒</div>
+    <div class="q-text" style="margin-bottom:8px;">Du behöver din egen länk</div>
+    <div class="q-hint" style="margin-bottom:0;">Varje spelare har en personlig länk till enkäten. Leta upp den där du fick den, eller fråga en tränare så skickar vi en ny.</div>
   </div>
-  <div class="nav"><button class="btn-next" onclick="go(0,1)">Nästa →</button></div>
 </div>
 
 <!-- S1 GLÄDJE -->
@@ -251,7 +248,7 @@ transition: border-color 0.2s, background 0.2s;
       <textarea class="freetext" id="ft-roligast" rows="2" placeholder="Skriv fritt..."></textarea>
     </div>
   </div>
-  <div class="nav"><button class="btn-back" onclick="goBackFromS1()">←</button><button class="btn-next" onclick="go(1,2)">Nästa →</button></div>
+  <div class="nav"><button class="btn-next" onclick="go(1,2)">Nästa →</button></div>
   <span class="skip-link" onclick="go(1,2)">Hoppa över</span>
 </div>
 
@@ -782,23 +779,63 @@ function getLeaderData(name, year) {
 }
 
 const A = {};
+// Hash av "namn|kod" för varje spelares personliga länk.
+// Själva koderna finns inte i filen, så de går inte att läsa ut härifrån.
+const GILTIGA_LANKAR = [
+  'c6b48c35',
+  '6479b550',
+  '5b5c38de',
+  'c7e5bf40',
+  '13f20cdc',
+  '837e7f5e',
+  'db785d55',
+  '3d539a90',
+  'cd994008',
+  'a7cf13d8',
+  '2d009462',
+  'c811acbf',
+  '119bad65',
+  'b55feb78',
+  '12d4bf5a',
+  'd470fc16',
+  'bfddd02a',
+  '197dc7f8',
+  'd13f7908',
+  'e23275af',
+  'daf2647d',
+  'a00c984e',
+  '1d17181c',
+  'd710a33a',
+  'ab1166b4'
+];
+function lankHash(txt) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < txt.length; i++) {
+    h = (h ^ txt.charCodeAt(i)) >>> 0;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
 const TOTAL = 14;
 
 document.getElementById('season-label').textContent = 'Säsong ' + new Date().getFullYear();
 
 // Läs spelarnamn från URL-parameter (?spelare=Emma)
 const urlParams = new URLSearchParams(window.location.search);
-const playerName = urlParams.get('spelare') || urlParams.get('name') || '';
+const playerName = (urlParams.get('spelare') || urlParams.get('name') || '').trim();
+const playerKod = (urlParams.get('kod') || '').trim().toLowerCase();
+const lankOk = !!playerName && !!playerKod &&
+  GILTIGA_LANKAR.indexOf(lankHash(playerName.toLowerCase() + '|' + playerKod)) !== -1;
 
 const greetingEl = document.getElementById('player-greeting');
-if (playerName) {
+if (lankOk) {
   A.name = playerName;
   greetingEl.textContent = 'Hej ' + playerName + '! 👋';
-  updateProgress(1);
   showSurveyScreen(1);
 } else {
-  updateProgress(0);
-  showSurveyScreen(0);
+  const pw = document.querySelector('.progress-wrap');
+  if (pw) pw.style.display = 'none';
+  showSurveyScreen('last');
 }
 
 function go(from, to) {
@@ -806,20 +843,13 @@ function go(from, to) {
   showSurveyScreen(to);
 }
 
-function goBackFromS1() {
-  const up = new URLSearchParams(window.location.search);
-  if (!up.get('spelare') && !up.get('name')) {
-    showSurveyScreen(0);
-  }
-}
-
 function showSurveyScreen(n) {
   document.querySelectorAll('#survey-section .screen').forEach(s => s.classList.remove('active'));
-  const id = n === 'done' ? 's-done' : 's' + n;
+  const id = n === 'done' ? 's-done' : n === 'last' ? 's-last' : 's' + n;
   const el = document.getElementById(id);
   if (el) { el.classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
   if (String(n) === '11') initNPS();
-  updateProgress(n);
+  if (n !== 'last') updateProgress(n);
 }
 
 function updateProgress(n) {
@@ -851,14 +881,6 @@ function harvestScreen(n) {
   const ftMap = {1:['ft-roligast'],3:['ft-larakanna','ft-narmast'],4:['ft-trygghet'],6:['ft-tranare'],7:['ft-favovningar'],12:['ft-fritt','ft-lofte'],'8b':['ft-fokus']};
   const ftKey = {'ft-roligast':'ft_1','ft-larakanna':'ft_3','ft-narmast':'ft_3b','ft-trygghet':'ft_4','ft-tranare':'ft_6','ft-favovningar':'ft_7','ft-fritt':'ft_12','ft-lofte':'ft_12c','ft-fokus':'ft_8b'};
   if (n === 12) { const el2 = document.getElementById('ft-roligare'); if (el2 && el2.value.trim()) A['ft_12b'] = el2.value.trim(); }
-  if (n === 0) {
-    const el = document.getElementById('inp-name');
-    if (el && el.value.trim()) {
-      A.name = el.value.trim();
-      const grEl = document.getElementById('player-greeting');
-      if (grEl) grEl.textContent = 'Hej ' + A.name + '! 👋';
-    }
-  }
   if (ftMap[n]) ftMap[n].forEach(id => { const el = document.getElementById(id); if (el && el.value.trim()) A[ftKey[id]] = el.value.trim(); });
 }
 
@@ -965,6 +987,12 @@ function logout() {
   showSurveyScreen(0);
 }
 function backToSurvey() {
+  if (typeof lankOk !== 'undefined' && !lankOk) {
+    document.getElementById('coach-login').style.display = 'none';
+    document.getElementById('survey-section').style.display = 'block';
+    showSurveyScreen('last');
+    return;
+  }
   document.getElementById('coach-login').style.display = 'none';
   document.getElementById('survey-section').style.display = 'block';
 }
