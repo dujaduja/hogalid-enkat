@@ -561,10 +561,13 @@ transition: border-color 0.2s, background 0.2s;
       <span class="followup-label">Finns det något som ibland gör det svårt att komma på fotbollen? Välj allt som stämmer.</span>
       <div class="chips" id="ch-hinder">
         <div class="chip" onclick="toggleChip(this,'q9f')">😴 Jag är trött</div>
+        <div class="chip" onclick="toggleChip(this,'q9f')">📚 Jag har läxor eller annat med skolan</div>
         <div class="chip" onclick="toggleChip(this,'q9f')">📅 Jag har andra aktiviteter</div>
         <div class="chip" onclick="toggleChip(this,'q9f')">🕐 Tiderna är svåra</div>
         <div class="chip" onclick="toggleChip(this,'q9f')">🚗 Det är långt att åka</div>
+        <div class="chip" onclick="toggleChip(this,'q9f')">👭 Vill leka med kompisar istället</div>
         <div class="chip" onclick="toggleChip(this,'q9f')">🎮 Jag vill hellre göra annat ibland</div>
+        <div class="chip" onclick="toggleChip(this,'q9f')">😟 Ibland känns det jobbigt att gå dit</div>
         <div class="chip" onclick="toggleChip(this,'q9f')">✅ Inget särskilt</div>
         <div class="chip" onclick="toggleChip(this,'q9f')">🤷 Annat</div>
       </div>
@@ -1179,7 +1182,7 @@ function renderGroupTab(data) {
   html += singleFreqSection(data, 'q9', '⚖️ Hur känns mängden träning?');
   html += singleFreqSection(data, 'q9d', '⚽ Hur känns det på matcher?');
   html += singleFreqSection(data, 'q9e', '⚽ Får de chansen att spela och pröva på matcher?');
-  html += chipFreqSection(data, 'q9f', '🚧 Praktiska hinder för att komma på fotbollen');
+  html += chipFreqSection(data, 'q9f', '🚧 Vad gör det svårt att komma på fotbollen?');
   html += singleFreqSection(data, 'q9c', '📅 Antal träningar per vecka');
   html += singleFreqSection(data, 'q11b', '🌟 Skulle de rekommendera laget till en kompis?');
   html += singleFreqSection(data, 'q3b', '👯 Fått en ny kompis i laget?');
@@ -1308,7 +1311,7 @@ function showPlayerPage(name) {
       {key:'q9b', q:'Annan idrott vid sidan av?'},
       {key:'q9d', q:'Hur känns det på matcher?'},
       {key:'q9e', q:'Får du chansen att spela på matcher?'},
-      {key:'q9f', q:'Praktiska hinder'},
+      {key:'q9f', q:'Vad gör det svårt att komma på fotbollen'},
       {key:'q11b',q:'Skulle du rekommendera laget till en kompis?'},
     ];
     const ftQuestions = [
