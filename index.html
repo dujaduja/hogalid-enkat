@@ -587,55 +587,15 @@ transition: border-color 0.2s, background 0.2s;
       </div>
     </div>
   </div>
-  <div class="nav"><button class="btn-back" onclick="go('9b',9)">←</button><button class="btn-next" onclick="go('9b','9c')">Nästa →</button></div>
-  <span class="skip-link" onclick="go('9b','9c')">Hoppa över</span>
-</div>
-
-<!-- S9c BOOST -->
-<div class="screen" id="s9c">
-  <div class="section-label">⚡ Boostpass</div>
-  <div class="card">
-    <div class="q-tag">Fråga 12 · Boostpass</div>
-    <div class="q-text">Hur känns tanken på att vara med på boostpass på fredagar?</div>
-    <div class="q-hint">Boostpass är en extra träning på fredagar. Den är lite mer intensiv än vanlig träning och man tränar tillsammans med killar från andra lag. Det är frivilligt och det finns bara fem platser.</div>
-    <div class="freq-list" id="ch-boost">
-      <div class="freq-opt" onclick="selectSingle(this,'qb1')">🌟 Ja, det vill jag jättegärna!</div>
-      <div class="freq-opt" onclick="selectSingle(this,'qb1')">🤔 Kanske, men jag är osäker</div>
-      <div class="freq-opt" onclick="selectSingle(this,'qb1')">😐 Vet inte riktigt</div>
-      <div class="freq-opt" onclick="selectSingle(this,'qb1')">😌 Nej, det känns inte rätt för mig just nu</div>
-    </div>
-    <div class="followup">
-      <span class="followup-label">Vad lockar dig med boostpasset? Välj gärna flera.</span>
-      <div class="chips" id="ch-boostlockande">
-        <div class="chip" onclick="toggleChip(this,'qb2')">💪 Jag vill utvecklas mer</div>
-        <div class="chip" onclick="toggleChip(this,'qb2')">⚡ Jag gillar extra utmaning</div>
-        <div class="chip" onclick="toggleChip(this,'qb2')">🔍 Jag är nyfiken på att prova</div>
-        <div class="chip" onclick="toggleChip(this,'qb2')">😄 Det verkar helt enkelt kul</div>
-        <div class="chip" onclick="toggleChip(this,'qb2')">👩‍🏫 Roligt med externa tränare</div>
-        <div class="chip" onclick="toggleChip(this,'qb2')">🤷 Något annat</div>
-      </div>
-    </div>
-    <div class="followup">
-      <span class="followup-label">Vad gör dig tväksim eller passar inte? Välj gärna flera.</span>
-      <div class="chips" id="ch-boosthinder">
-        <div class="chip" onclick="toggleChip(this,'qb3')">🕐 Tiden eller dagen passar inte</div>
-        <div class="chip" onclick="toggleChip(this,'qb3')">😅 Det verkar lite intensivt</div>
-        <div class="chip" onclick="toggleChip(this,'qb3')">😨 Jag skulle bli nervös</div>
-        <div class="chip" onclick="toggleChip(this,'qb3')">👦 Jag är osäker på att träna med killar</div>
-        <div class="chip" onclick="toggleChip(this,'qb3')">😊 Vanlig träning räcker bra för mig</div>
-        <div class="chip" onclick="toggleChip(this,'qb3')">🤷 Något annat</div>
-      </div>
-    </div>
-  </div>
-  <div class="nav"><button class="btn-back" onclick="go('9c','9b')">←</button><button class="btn-next" onclick="go('9c',10)">Nästa →</button></div>
-  <span class="skip-link" onclick="go('9c',10)">Hoppa över</span>
+  <div class="nav"><button class="btn-back" onclick="go('9b',9)">←</button><button class="btn-next" onclick="go('9b',10)">Nästa →</button></div>
+  <span class="skip-link" onclick="go('9b',10)">Hoppa över</span>
 </div>
 
 <!-- S10 LAGETS UTVECKLING -->
 <div class="screen" id="s10">
   <div class="section-label">🚀 Lagets utveckling</div>
   <div class="card">
-    <div class="q-tag">Fråga 13 · Laget</div>
+    <div class="q-tag">Fråga 12 · Laget</div>
     <div class="q-text">Vad tycker du att ni som lag behöver jobba mer på? (välj upp till 3)</div>
     <div class="chips" id="ch-lag">
       <div class="chip" onclick="toggleChip(this,'q10',3)">🎯 Passa bättre</div>
@@ -674,7 +634,7 @@ transition: border-color 0.2s, background 0.2s;
       </div>
     </div>
   </div>
-  <div class="nav"><button class="btn-back" onclick="go(10,'9c')">←</button><button class="btn-next" onclick="go(10,11)">Nästa →</button></div>
+  <div class="nav"><button class="btn-back" onclick="go(10,'9b')">←</button><button class="btn-next" onclick="go(10,11)">Nästa →</button></div>
   <span class="skip-link" onclick="go(10,11)">Hoppa över</span>
 </div>
 
@@ -691,7 +651,7 @@ transition: border-color 0.2s, background 0.2s;
     <div id="nps-label" style="text-align:center;font-size:14px;color:#555;margin-top:6px;min-height:22px;"></div>
   </div>
   <div class="card">
-    <div class="q-tag">Fråga 14 · Framtiden</div>
+    <div class="q-tag">Fråga 13 · Framtiden</div>
     <div class="q-text">Vill du fortsätta spela fotboll nästa säsong?</div>
     <div class="emoji-row" id="eq11">
       <div class="emoji-opt" onclick="pickEmoji('q11',1,this)"><span class="icon">😬</span><span class="lbl">Nej, troligtvis inte</span></div>
@@ -717,7 +677,7 @@ transition: border-color 0.2s, background 0.2s;
 <div class="screen" id="s12">
   <div class="section-label">💬 Fritt</div>
   <div class="card">
-    <div class="q-tag">Fråga 15 · Öppet</div>
+    <div class="q-tag">Fråga 14 · Öppet</div>
     <div class="q-text">Vad skulle göra fotbollen ännu roligare för dig?</div>
     <div class="q-hint">Inga svar är fel — skriv precis vad du tänker!</div>
     <textarea class="freetext" id="ft-roligare" rows="3" placeholder="Skriv fritt..."></textarea>
@@ -802,7 +762,7 @@ function getLeaderData(name, year) {
 }
 
 const A = {};
-const TOTAL = 15;
+const TOTAL = 14;
 
 document.getElementById('season-label').textContent = 'Säsong ' + new Date().getFullYear();
 
@@ -851,8 +811,8 @@ function updateProgress(n) {
   }
   // Map screen IDs to sequential progress positions
   // Map each screen to the question number shown in its q-tag (or closest equivalent)
-  // s0=namn(0), s1=Q1, s2=Q2, s3=Q3, s4=Q4, s4b=Q5, s5=Q6, s6=Q7, s7=Q8, s8=Q9, s8b=Q9.5(visas ej), s9=Q10, s9b=Q11, s9c=Q12, s10=Q13, s10b=NPS(visas ej), s11=Q14, s12=Q15
-  const screenOrder = {'0':0,'1':1,'2':2,'3':3,'4':4,'4b':5,'5':6,'6':7,'7':8,'8':9,'8b':9,'9':10,'9b':11,'9c':12,'10':13,'11':14,'12':15};
+  // s0=namn(0), s1=Q1 ... s8=Q9, s8b=Q9 (ingen egen numrering), s9=Q10, s9b=Q11, s10=Q12, s11=Q13 (NPS+framtiden), s12=Q14
+  const screenOrder = {'0':0,'1':1,'2':2,'3':3,'4':4,'4b':5,'5':6,'6':7,'7':8,'8':9,'8b':9,'9':10,'9b':11,'10':12,'11':13,'12':14};
   const nNum = screenOrder[String(n)] !== undefined ? screenOrder[String(n)] : Number(n);
   if (nNum > TOTAL) {
     document.getElementById('prog-fill').style.width = '100%';
@@ -1087,15 +1047,6 @@ function renderYear(data, all, year) {
       ${trend}
     </div>`;
   });
-  // Boost interest count
-  const boostInterested = data.filter(r => r.qb1 && r.qb1.startsWith('🌟'));
-  const boostMaybe = data.filter(r => r.qb1 && (r.qb1.startsWith('🤔') || r.qb1.startsWith('😐')));
-  kpiHtml += `<div class="stat-card" style="cursor:pointer;" onclick="switchTab('boost')">
-    <div style="font-size:20px;margin-bottom:4px;">⚡</div>
-    <div class="stat-val" style="color:#c8102e;">${boostInterested.length}</div>
-    <div class="stat-label">Vill ha boost</div>
-    <div style="font-size:11px;font-weight:700;color:var(--muted);margin-top:3px;">${boostMaybe.length} kanske</div>
-  </div>`;
   kpiHtml += `<div class="stat-card">
     <div style="font-size:20px;margin-bottom:4px;">👥</div>
     <div class="stat-val">${data.length}</div>
@@ -1107,19 +1058,17 @@ function renderYear(data, all, year) {
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('group')">📊 Grupp</button>
       <button class="tab-btn" onclick="switchTab('players')">👤 Individer</button>
-      <button class="tab-btn" onclick="switchTab('boost')">⚡ Boost</button>
       <button class="tab-btn" onclick="switchTab('freetext')">💬 Fritext</button>
     </div>
     <div id="tab-group" class="tab-pane active">${renderGroupTab(data)}</div>
     <div id="tab-players" class="tab-pane">${renderPlayersTab(data)}</div>
-    <div id="tab-boost" class="tab-pane">${renderBoostTab(data)}</div>
     <div id="tab-freetext" class="tab-pane">${renderFreetextTab(data)}</div>
   `;
   document.getElementById('dash-content').innerHTML = kpiHtml + tabsHtml;
 }
 
 function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['group','players','boost','freetext'][i]===name));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['group','players','freetext'][i]===name));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
 }
@@ -1219,7 +1168,6 @@ function renderGroupTab(data) {
   html += chipFreqSection(data, 'q8', '🌡️ Lagkänsla — vad stämmer på laget?');
   html += chipFreqSection(data, 'q10', '🚀 Vad behöver laget jobba på?');
   html += singleFreqSection(data, 'q9', '⚖️ Hur känns mängden träning?');
-  html += singleFreqSection(data, 'qb1', '⚡ Intresse för boostpass');
   html += singleFreqSection(data, 'q9d', '⚽ Hur känns det på matcher?');
   html += singleFreqSection(data, 'q9e', '⚽ Får de chansen att spela och pröva på matcher?');
   html += chipFreqSection(data, 'q9f', '🚧 Praktiska hinder för att komma på fotbollen');
@@ -1352,9 +1300,6 @@ function showPlayerPage(name) {
       {key:'q9d', q:'Hur känns det på matcher?'},
       {key:'q9e', q:'Får du chansen att spela på matcher?'},
       {key:'q9f', q:'Praktiska hinder'},
-      {key:'qb1', q:'Intresse för boostpass'},
-      {key:'qb2', q:'Vad lockar med boost'},
-      {key:'qb3', q:'Vad gör dem tväksima med boost'},
       {key:'q11b',q:'Skulle du rekommendera laget till en kompis?'},
     ];
     const ftQuestions = [
@@ -1496,55 +1441,6 @@ function showPlayerPage(name) {
   }
   renderPlayerPage(activePlayerYear);
   window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function renderBoostTab(data) {
-  const answered = data.filter(r => r.qb1);
-  if (!answered.length) return '<div class="no-data">Inga svar på boostfrågan ännu.</div>';
-
-  const interested  = data.filter(r => r.qb1 && r.qb1.startsWith('🌟'));
-  const maybe       = data.filter(r => r.qb1 && (r.qb1.startsWith('🤔') || r.qb1.startsWith('😐')));
-  const notInterested = data.filter(r => r.qb1 && r.qb1.startsWith('😌'));
-
-  let html = '';
-
-  // Summary cards
-  html += '<div class="stat-grid">';
-  html += '<div class="stat-card"><div style="font-size:20px;">🌟</div><div class="stat-val" style="color:#c8102e;">' + interested.length + '</div><div class="stat-label">Vill jättegärna</div></div>';
-  html += '<div class="stat-card"><div style="font-size:20px;">🤔</div><div class="stat-val">' + maybe.length + '</div><div class="stat-label">Kanske / vet inte</div></div>';
-  html += '<div class="stat-card"><div style="font-size:20px;">😌</div><div class="stat-val">' + notInterested.length + '</div><div class="stat-label">Inte just nu</div></div>';
-  html += '<div class="stat-card"><div style="font-size:20px;">👥</div><div class="stat-val">' + answered.length + '</div><div class="stat-label">Har svarat</div></div>';
-  html += '</div>';
-
-  // Names of interested players
-  if (interested.length) {
-    html += '<div class="dash-section" style="border-color:#c8102e;">';
-    html += '<h3>🌟 Vill vara med på boost — ' + interested.length + ' spelare</h3>';
-    html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
-    interested.forEach(r => {
-      html += '<div style="background:#ffe0e0;color:#c0392b;font-weight:700;font-size:13px;padding:6px 14px;border-radius:99px;">' + (r.name||'(okänd)') + '</div>';
-    });
-    html += '</div></div>';
-  }
-
-  // Names of maybe players
-  if (maybe.length) {
-    html += '<div class="dash-section">';
-    html += '<h3>🤔 Kanske intresserade — ' + maybe.length + ' spelare</h3>';
-    html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
-    maybe.forEach(r => {
-      html += '<div style="background:#fff9e6;color:#b7860b;font-weight:700;font-size:13px;padding:6px 14px;border-radius:99px;">' + (r.name||'(okänd)') + '</div>';
-    });
-    html += '</div></div>';
-  }
-
-  // What attracts them
-  html += chipFreqSection(data, 'qb2', '⚡ Vad lockar med boostpasset?');
-
-  // What holds them back
-  html += chipFreqSection(data, 'qb3', '🚧 Vad gör dem tväksima?');
-
-  return html;
 }
 
 function renderFreetextTab(data) {
