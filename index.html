@@ -674,13 +674,15 @@ transition: border-color 0.2s, background 0.2s;
       </div>
     </div>
   </div>
-  <div class="nav"><button class="btn-back" onclick="go(10,'9c')">←</button><button class="btn-next" onclick="go(10,'10b')">Nästa →</button></div>
-  <span class="skip-link" onclick="go(10,'10b')">Hoppa över</span>
+  <div class="nav"><button class="btn-back" onclick="go(10,'9c')">←</button><button class="btn-next" onclick="go(10,11)">Nästa →</button></div>
+  <span class="skip-link" onclick="go(10,11)">Hoppa över</span>
 </div>
 
 <!-- S10b NPS -->
-<div class="screen" id="s10b">
-  <div class="section-label">❤️ Högalid</div>
+
+<!-- S11 FRAMTIDEN + NPS (sammanslagen) -->
+<div class="screen" id="s11">
+  <div class="section-label">❤️ Högalid & Framtiden</div>
   <div class="card">
     <div class="q-tag">Så här glad är jag</div>
     <div class="q-text">Hur glad är du över att spela fotboll i Högalid?</div>
@@ -688,13 +690,6 @@ transition: border-color 0.2s, background 0.2s;
     <div class="nps-row" id="nps-row"></div>
     <div id="nps-label" style="text-align:center;font-size:14px;color:#555;margin-top:6px;min-height:22px;"></div>
   </div>
-  <div class="nav"><button class="btn-back" onclick="go('10b',10)">←</button><button class="btn-next" onclick="go('10b',11)">Nästa →</button></div>
-  <span class="skip-link" onclick="go('10b',11)">Hoppa över</span>
-</div>
-
-<!-- S11 FORTSÄTTNING -->
-<div class="screen" id="s11">
-  <div class="section-label">🔮 Framtiden</div>
   <div class="card">
     <div class="q-tag">Fråga 14 · Framtiden</div>
     <div class="q-text">Vill du fortsätta spela fotboll nästa säsong?</div>
@@ -714,7 +709,7 @@ transition: border-color 0.2s, background 0.2s;
       </div>
     </div>
   </div>
-  <div class="nav"><button class="btn-back" onclick="go(11,'10b')">←</button><button class="btn-next" onclick="go(11,12)">Nästa →</button></div>
+  <div class="nav"><button class="btn-back" onclick="go(11,10)">←</button><button class="btn-next" onclick="go(11,12)">Nästa →</button></div>
   <span class="skip-link" onclick="go(11,12)">Hoppa över</span>
 </div>
 
@@ -843,7 +838,7 @@ function showSurveyScreen(n) {
   const id = n === 'done' ? 's-done' : 's' + n;
   const el = document.getElementById(id);
   if (el) { el.classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
-  if (n === '10b') initNPS();
+  if (String(n) === '11') initNPS();
   updateProgress(n);
 }
 
@@ -857,7 +852,7 @@ function updateProgress(n) {
   // Map screen IDs to sequential progress positions
   // Map each screen to the question number shown in its q-tag (or closest equivalent)
   // s0=namn(0), s1=Q1, s2=Q2, s3=Q3, s4=Q4, s4b=Q5, s5=Q6, s6=Q7, s7=Q8, s8=Q9, s8b=Q9.5(visas ej), s9=Q10, s9b=Q11, s9c=Q12, s10=Q13, s10b=NPS(visas ej), s11=Q14, s12=Q15
-  const screenOrder = {'0':0,'1':1,'2':2,'3':3,'4':4,'4b':5,'5':6,'6':7,'7':8,'8':9,'8b':9,'9':10,'9b':11,'9c':12,'10':13,'10b':13,'11':14,'12':15};
+  const screenOrder = {'0':0,'1':1,'2':2,'3':3,'4':4,'4b':5,'5':6,'6':7,'7':8,'8':9,'8b':9,'9':10,'9b':11,'9c':12,'10':13,'11':14,'12':15};
   const nNum = screenOrder[String(n)] !== undefined ? screenOrder[String(n)] : Number(n);
   if (nNum > TOTAL) {
     document.getElementById('prog-fill').style.width = '100%';
