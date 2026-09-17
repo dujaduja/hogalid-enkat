@@ -57,8 +57,8 @@ padding: 4px 14px; border-radius: 99px; margin-top: 10px;
 
 .container { max-width: 620px; margin: 0 auto; padding: 12px 16px 48px; background: #071d49; }
 
-.screen { display: none; }
-.screen.active { display: block; animation: slideUp 0.32s cubic-bezier(.4,0,.2,1) both; }
+.screen { display: none !important; }
+.screen.active { display: block !important; animation: slideUp 0.32s cubic-bezier(.4,0,.2,1) forwards; }
 @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 
 .section-label {
@@ -807,7 +807,7 @@ function getLeaderData(name, year) {
 }
 
 const A = {};
-const TOTAL = 16;
+const TOTAL = 17;
 
 document.getElementById('season-label').textContent = 'Säsong ' + new Date().getFullYear();
 
@@ -854,8 +854,9 @@ function updateProgress(n) {
     document.getElementById('prog-text').textContent = 'Klart! 🎉';
     return;
   }
-  // Map '9b' to 9.5 for progress purposes
-  const nNum = n === '9b' ? 11.5 : n === '9c' ? 12 : n === '4b' ? 5 : n === '8b' ? 9.5 : n === '10b' ? 14.5 : Number(n);
+  // Map screen IDs to sequential progress positions
+  const screenOrder = {'0':0,'1':1,'2':2,'3':3,'4':4,'4b':5,'5':6,'6':7,'7':8,'8':9,'8b':10,'9':11,'9b':12,'9c':13,'10':14,'10b':15,'11':16,'12':17};
+  const nNum = screenOrder[String(n)] !== undefined ? screenOrder[String(n)] : Number(n);
   if (nNum > TOTAL) {
     document.getElementById('prog-fill').style.width = '100%';
     document.getElementById('prog-pct').textContent = '100%';
@@ -865,7 +866,8 @@ function updateProgress(n) {
   const pct = Math.max(8, Math.round((nNum / TOTAL) * 100));
   document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-pct').textContent = pct + '%';
-  document.getElementById('prog-text').textContent = nNum === 0 ? 'Börjar...' : 'Fråga ' + Math.round(nNum) + ' av ' + TOTAL;
+  const fraganr = nNum === 0 ? 0 : Math.min(nNum, TOTAL);
+  document.getElementById('prog-text').textContent = fraganr === 0 ? 'Börjar...' : 'Fråga ' + fraganr + ' av ' + TOTAL;
 }
 
 function harvestScreen(n) {
