@@ -902,13 +902,11 @@ function harvestScreen(n) {
   if (ftMap[n]) ftMap[n].forEach(id => { const el = document.getElementById(id); if (el && el.value.trim()) A[ftKey[id]] = el.value.trim(); });
 }
 
-// Svarstid: klockan startar vid första ikryssade svaret, inte när länken öppnas.
-// Då räknas inte tiden någon låter sidan ligga innan hon börjar.
-let forsta_svar = 0, sista_svar = 0;
+// Svarstid: från första ikryssade svaret till klicket på skicka in.
+// Tiden innan hon börjar svara räknas alltså inte med.
+let forsta_svar = 0;
 function registreraSvar() {
-  const nu = Date.now();
-  if (!forsta_svar) forsta_svar = nu;
-  sista_svar = nu;
+  if (!forsta_svar) forsta_svar = Date.now();
 }
 
 function pickEmoji(key, val, el) {
@@ -957,7 +955,7 @@ async function submitSurvey() {
   harvestScreen(12); harvestScreen(7);
   A.timestamp = new Date().toISOString();
   if (String(A.name || '').trim().toLowerCase() === TESTSPELARE) A.test = true;
-  if (forsta_svar && sista_svar > forsta_svar) A.sekunder = Math.round((sista_svar - forsta_svar) / 1000);
+  if (forsta_svar) A.sekunder = Math.max(1, Math.round((Date.now() - forsta_svar) / 1000));
   A.year = new Date().getFullYear();
   A.round = getCurrentRound();
 
@@ -989,7 +987,7 @@ async function submitSurvey() {
   showSurveyScreen('done');
   updateProgress('done');
   Object.keys(A).forEach(k => delete A[k]);
-  forsta_svar = 0; sista_svar = 0;
+  forsta_svar = 0;
 }
 
 function getCurrentRound() {
