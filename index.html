@@ -372,7 +372,7 @@ transition: border-color 0.2s, background 0.2s;
       <div class="chips" id="ch-malkansla">
         <div class="chip" onclick="selectSingle(this,'q4e')">🤩 Jättekul!</div>
         <div class="chip" onclick="selectSingle(this,'q4e')">😄 Ganska kul</div>
-        <div class="chip" onclick="selectSingle(this,'q4e')">🤔 Okä men inte mer</div>
+        <div class="chip" onclick="selectSingle(this,'q4e')">🤔 Okej, men inte mer</div>
         <div class="chip" onclick="selectSingle(this,'q4e')">😥 Jag vill helst slippa</div>
         <div class="chip" onclick="selectSingle(this,'q4e')">🤷 Har inte provat</div>
       </div>
@@ -381,7 +381,7 @@ transition: border-color 0.2s, background 0.2s;
       <span class="followup-label">Känner du att du vet vad du ska göra när du står i mål?</span>
       <div class="chips" id="ch-malvet">
         <div class="chip" onclick="selectSingle(this,'q4f')">Ja, oftast 👍</div>
-        <div class="chip" onclick="selectSingle(this,'q4f')">Lite grand</div>
+        <div class="chip" onclick="selectSingle(this,'q4f')">Lite grann</div>
         <div class="chip" onclick="selectSingle(this,'q4f')">Nej, känner mig osäker</div>
         <div class="chip" onclick="selectSingle(this,'q4f')">Vet inte</div>
       </div>
@@ -441,7 +441,7 @@ transition: border-color 0.2s, background 0.2s;
       <div class="chip" onclick="toggleChip(this,'q6')">👂 Lyssnar på mig</div>
       <div class="chip" onclick="toggleChip(this,'q6')">😠 Höjer rösten eller blir irriterade</div>
       <div class="chip" onclick="toggleChip(this,'q6')">⚖️ Är rättvisa</div>
-      <div class="chip" onclick="toggleChip(this,'q6')">🏆 Fokuserar mest på de bästa</div>
+      <div class="chip" onclick="toggleChip(this,'q6')">🏆 Fokuserar mest på de bästa spelarna</div>
       <div class="chip" onclick="toggleChip(this,'q6')">❤️ Bryr sig om mig som person</div>
       <div class="chip" onclick="toggleChip(this,'q6')">😟 Märker mig bara när det går dåligt</div>
       <div class="chip" onclick="toggleChip(this,'q6')">🎓 Hjälper mig lära mig nytt</div>
@@ -632,7 +632,7 @@ transition: border-color 0.2s, background 0.2s;
         <div class="chip" onclick="toggleChip(this,'qgillar_mest',3)">🛡️ Försvarsövningar</div>
         <div class="chip" onclick="toggleChip(this,'qgillar_mest',3)">🏋️ Fysträning</div>
         <div class="chip" onclick="toggleChip(this,'qgillar_mest',3)">🕹️ Lekar</div>
-        <div class="chip" onclick="toggleChip(this,'qgillar_mest',3)">🧤 Målvaktspass</div>
+        <div class="chip" onclick="toggleChip(this,'qgillar_mest',3)">🧤 Målvaktsträning</div>
       </div>
     </div>
     <div class="followup">
@@ -645,7 +645,7 @@ transition: border-color 0.2s, background 0.2s;
         <div class="chip" onclick="toggleChip(this,'qgillar_minst',3)">🛡️ Försvarsövningar</div>
         <div class="chip" onclick="toggleChip(this,'qgillar_minst',3)">🏋️ Fysträning</div>
         <div class="chip" onclick="toggleChip(this,'qgillar_minst',3)">🕹️ Lekar</div>
-        <div class="chip" onclick="toggleChip(this,'qgillar_minst',3)">🧤 Målvaktspass</div>
+        <div class="chip" onclick="toggleChip(this,'qgillar_minst',3)">🧤 Målvaktsträning</div>
       </div>
     </div>
   </div>
@@ -1014,6 +1014,24 @@ function backToSurvey() {
   document.getElementById('survey-section').style.display = 'block';
 }
 
+// Alternativ som bytt formulering efter att enkäten gick ut.
+// Svar som redan kommit in räknas som den nya varianten.
+const OMFORMULERADE = {
+  '🧤 Målvaktspass': '🧤 Målvaktsträning',
+  '🏆 Fokuserar mest på de bästa': '🏆 Fokuserar mest på de bästa spelarna',
+  '🤔 Okä men inte mer': '🤔 Okej, men inte mer',
+  'Lite grand': 'Lite grann'
+};
+function normalisera(r) {
+  const ut = Object.assign({}, r);
+  Object.keys(ut).forEach(k => {
+    const v = ut[k];
+    if (typeof v === 'string') { if (OMFORMULERADE[v]) ut[k] = OMFORMULERADE[v]; }
+    else if (Array.isArray(v)) ut[k] = v.map(x => OMFORMULERADE[x] || x);
+  });
+  return ut;
+}
+
 // Ett svar per spelare, år och omgång. Senaste inskickade vinner.
 // Råsvaren rörs aldrig, varken i localStorage eller i Supabase.
 function svarstid(r) {
@@ -1040,7 +1058,7 @@ function dedupe(rows) {
     const fore = senaste.get(nyckel);
     if (!fore || svarstid(r) >= svarstid(fore)) senaste.set(nyckel, r);
   });
-  const kvar = [...senaste.values(), ...utan_namn];
+  const kvar = [...senaste.values(), ...utan_namn].map(normalisera);
   dolda_dubbletter = (rows || []).length - kvar.length;
   return kvar;
 }
