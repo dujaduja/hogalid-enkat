@@ -128,6 +128,8 @@ transition: border-color 0.2s, background 0.2s;
 .dash-header h2 { font-family:'Fredoka One',cursive; font-size:24px; color:white; }
 .btn-logout { background:#ffe0e0; color:#c0392b; font-size:12px; font-weight:700; padding:8px 14px; border:none; border-radius:99px; cursor:pointer; }
 .btn-clear { background:#fff3e0; color:#e67e22; font-size:12px; font-weight:700; padding:8px 14px; border:none; border-radius:99px; cursor:pointer; }
+.btn-refresh { background:#dde6f4; color:var(--green-dark); font-size:12px; font-weight:700; padding:8px 14px; border:none; border-radius:99px; cursor:pointer; }
+.btn-refresh:disabled { opacity:0.6; cursor:default; }
 
 .year-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
 .year-tab { background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.3); border-radius:99px; padding:7px 16px; font-size:13px; font-weight:700; cursor:pointer; color:rgba(255,255,255,0.7); }
@@ -709,12 +711,20 @@ transition: border-color 0.2s, background 0.2s;
 
 <!-- TACK -->
 <div class="screen" id="s-done">
-  <div class="done-wrap">
+  <div class="card" style="text-align:center;padding:34px 20px 28px;">
     <span class="done-ball">⚽</span>
-    <div class="done-title">Tack så jättemycket!</div>
-    <div class="done-text">Du är fantastisk!<br>Dina svar hjälper oss att göra träningarna ännu bättre för dig och hela laget. 💚</div>
-    <button class="coach-link" onclick="showCoachLogin()">🔒 Tränare? Logga in här</button>
+    <div class="done-title">Nu är du klar!</div>
+    <div class="done-text">
+      Tack för hjälpen<span id="done-namn"></span>! Dina svar är inskickade.
+      <br><br>
+      Vi tränare läser varje svar, och vi använder dem för att göra träningarna ännu bättre för dig och hela laget.
+    </div>
+    <div style="margin-top:20px;font-family:'Fredoka One',cursive;font-size:19px;color:var(--green-dark);line-height:1.4;">
+      Tack för att du är med i F15! 💚
+    </div>
+    <div style="margin-top:20px;font-size:13px;font-weight:600;color:var(--muted);">Du kan stänga sidan nu.</div>
   </div>
+  <span class="skip-link" onclick="showCoachLogin()">🔒 Tränare? Logga in här</span>
 </div>
 
 </div>
@@ -748,10 +758,12 @@ transition: border-color 0.2s, background 0.2s;
     <div class="dash-header">
       <h2>Alla svar</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-refresh" id="btn-refresh" onclick="uppdateraDash()">🔄 Uppdatera</button>
         <button class="btn-clear" onclick="clearData()">🗑️ Rensa all data</button>
         <button class="btn-logout" onclick="logout()">Logga ut</button>
       </div>
     </div>
+    <div id="dash-uppdaterad" style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin:-4px 0 10px;"></div>
     <div class="year-tabs" id="year-tabs"></div>
     <div id="dash-content"></div>
   </div>
@@ -955,6 +967,8 @@ async function submitSurvey() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   } catch(e) {}
 
+  const dn = document.getElementById('done-namn');
+  if (dn) dn.textContent = playerName ? ', ' + playerName : '';
   showSurveyScreen('done');
   updateProgress('done');
   Object.keys(A).forEach(k => delete A[k]);
@@ -1084,6 +1098,13 @@ async function clearData() {
 
 let activeYear = new Date().getFullYear();
 
+async function uppdateraDash() {
+  const b = document.getElementById('btn-refresh');
+  if (b) { b.disabled = true; b.textContent = '⏳ Hämtar...'; }
+  try { await renderDash(); }
+  finally { if (b) { b.disabled = false; b.textContent = '🔄 Uppdatera'; } }
+}
+
 async function renderDash() {
   const serverData = await loadAllFromServer();
   if (serverData) {
@@ -1092,6 +1113,11 @@ async function renderDash() {
   const rader = loadAll();
   antal_testsvar = rader.filter(arTestsvar).length;
   const all = dedupe(visa_testsvar ? rader : rader.filter(r => !arTestsvar(r)));
+  const uppd = document.getElementById('dash-uppdaterad');
+  if (uppd) {
+    const klockan = new Date().toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+    uppd.textContent = all.length + (all.length === 1 ? ' svar' : ' svar') + ' · uppdaterad ' + klockan;
+  }
   if (!all.length) {
     document.getElementById('year-tabs').innerHTML = '';
     document.getElementById('dash-content').innerHTML = '<div class="no-data">Inga svar ännu. Dela enkäten med spelarna! ⚽</div>';
