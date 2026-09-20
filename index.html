@@ -841,6 +841,10 @@ const playerKod = (urlParams.get('kod') || '').trim().toLowerCase();
 const lankOk = !!playerName && !!playerKod &&
   GILTIGA_LANKAR.indexOf(lankHash(playerName.toLowerCase() + '|' + playerKod)) !== -1;
 
+document.addEventListener('input', function (e) {
+  if (e.target && e.target.classList && e.target.classList.contains('freetext')) registreraSvar();
+});
+
 const greetingEl = document.getElementById('player-greeting');
 if (lankOk) {
   A.name = playerName;
@@ -898,7 +902,17 @@ function harvestScreen(n) {
   if (ftMap[n]) ftMap[n].forEach(id => { const el = document.getElementById(id); if (el && el.value.trim()) A[ftKey[id]] = el.value.trim(); });
 }
 
+// Svarstid: klockan startar vid första ikryssade svaret, inte när länken öppnas.
+// Då räknas inte tiden någon låter sidan ligga innan hon börjar.
+let forsta_svar = 0, sista_svar = 0;
+function registreraSvar() {
+  const nu = Date.now();
+  if (!forsta_svar) forsta_svar = nu;
+  sista_svar = nu;
+}
+
 function pickEmoji(key, val, el) {
+  registreraSvar();
   el.closest('.emoji-row').querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('sel'));
   el.classList.add('sel');
   A[key] = val;
@@ -923,6 +937,7 @@ function initNPS() {
 }
 
 function toggleChip(el, key, max) {
+  registreraSvar();
   const c = el.closest('.chips');
   if (el.classList.contains('sel')) { el.classList.remove('sel'); }
   else {
@@ -932,6 +947,7 @@ function toggleChip(el, key, max) {
   A[key] = [...c.querySelectorAll('.chip.sel')].map(x => x.textContent.trim());
 }
 function selectSingle(el, key) {
+  registreraSvar();
   el.closest('.chips,.freq-list').querySelectorAll('.chip,.freq-opt').forEach(x => x.classList.remove('sel'));
   el.classList.add('sel');
   A[key] = el.textContent.trim();
@@ -941,6 +957,7 @@ async function submitSurvey() {
   harvestScreen(12); harvestScreen(7);
   A.timestamp = new Date().toISOString();
   if (String(A.name || '').trim().toLowerCase() === TESTSPELARE) A.test = true;
+  if (forsta_svar && sista_svar > forsta_svar) A.sekunder = Math.round((sista_svar - forsta_svar) / 1000);
   A.year = new Date().getFullYear();
   A.round = getCurrentRound();
 
@@ -972,6 +989,7 @@ async function submitSurvey() {
   showSurveyScreen('done');
   updateProgress('done');
   Object.keys(A).forEach(k => delete A[k]);
+  forsta_svar = 0; sista_svar = 0;
 }
 
 function getCurrentRound() {
@@ -1165,6 +1183,24 @@ function esc(t) {
   return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 }
 
+const MAX_RIMLIG_TID = 3600; // en timme, däröver räknas svaret som avbrutet och pausat
+function formateraTid(sek) {
+  if (!sek && sek !== 0) return '—';
+  if (sek < 60) return sek + ' s';
+  const min = Math.floor(sek / 60), rest = sek % 60;
+  if (min < 10) return min + ' min ' + String(rest).padStart(2, '0') + ' s';
+  return min + ' min';
+}
+function svarstider(data) {
+  const alla = data.map(r => r.sekunder).filter(v => typeof v === 'number' && v > 0);
+  const rimliga = alla.filter(v => v <= MAX_RIMLIG_TID).sort((a, b) => a - b);
+  if (!rimliga.length) return { antal: 0, bortrakn: alla.length, median: null, medel: null };
+  const m = Math.floor(rimliga.length / 2);
+  const median = rimliga.length % 2 ? rimliga[m] : Math.round((rimliga[m - 1] + rimliga[m]) / 2);
+  const medel = Math.round(rimliga.reduce((a, b) => a + b, 0) / rimliga.length);
+  return { antal: rimliga.length, bortrakn: alla.length - rimliga.length, median, medel };
+}
+
 function emojiForScore(s) {
   if (!s) return '—';
   const n = Math.round(s);
@@ -1230,6 +1266,15 @@ function renderYear(data, all, year) {
     <div class="stat-label">Glad för Högalid</div>
     <div style="font-size:11px;font-weight:700;color:var(--muted);margin-top:3px;">${npsVals.length ? 'snitt av 0–10' : ''}</div>
   </div>`;
+  const tider = svarstider(data);
+  if (tider.antal) {
+    kpiHtml += `<div class="stat-card">
+      <div style="font-size:20px;margin-bottom:4px;">⏱️</div>
+      <div class="stat-val" style="font-size:26px;">${formateraTid(tider.median)}</div>
+      <div class="stat-label">Mediantid</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);margin-top:3px;">snitt ${formateraTid(tider.medel)} · ${tider.antal} svar${tider.bortrakn ? '<br>' + tider.bortrakn + ' över 1 h borta' : ''}</div>
+    </div>`;
+  }
   kpiHtml += `<div class="stat-card">
     <div style="font-size:20px;margin-bottom:4px;">👥</div>
     <div class="stat-val">${data.length}</div>
@@ -1416,7 +1461,7 @@ function renderPlayersTab(data) {
   let html = `<div class="dash-section"><h3>👤 Individuella svar</h3>
     <table class="player-table">
       <thead><tr>
-        <th>Namn</th><th>Trivselindex</th><th>Glädje</th><th>Tillhörighet</th><th>Trygghet</th><th>Förbättring</th><th>Delaktighet</th><th>Fortsätta</th>
+        <th>Namn</th><th>Tid</th><th>Trivselindex</th><th>Glädje</th><th>Tillhörighet</th><th>Trygghet</th><th>Förbättring</th><th>Delaktighet</th><th>Fortsätta</th>
       </tr></thead><tbody>`;
   data.forEach(r => {
     const name = r.name || '(okänd)';
@@ -1432,6 +1477,7 @@ function renderPlayersTab(data) {
     html += `<tr>
       <td><strong style="cursor:pointer;color:var(--green-dark);text-decoration:underline;text-underline-offset:2px;" onclick="showPlayerPage('${safeName}')">
         ${name}</strong><br><span style="font-size:11px;color:var(--muted);">${date}</span></td>
+      <td><span style="font-size:12px;font-weight:700;color:${r.sekunder > MAX_RIMLIG_TID ? 'var(--muted)' : 'var(--green-dark)'};">${r.sekunder ? formateraTid(r.sekunder) : '—'}</span>${r.sekunder > MAX_RIMLIG_TID ? '<br><span style="font-size:10px;color:var(--muted);">pausat</span>' : ''}</td>
       <td><span style="background:${wiBg};color:${wiColor};font-weight:700;font-size:13px;padding:3px 10px;border-radius:99px;">${wi ? wi+'/4' : '—'}</span></td>
       <td>${cols}</td>
     </tr>`;
