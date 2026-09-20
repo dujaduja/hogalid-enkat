@@ -723,6 +723,9 @@ transition: border-color 0.2s, background 0.2s;
       Tack för att du är med i F15! 💚
     </div>
     <div style="margin-top:20px;font-size:13px;font-weight:600;color:var(--muted);">Du kan stänga sidan nu.</div>
+    <div id="done-varning" style="display:none;margin-top:18px;background:#fff9e6;border:1.5px solid #f0d98a;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:600;color:#7a5c00;text-align:left;">
+      ⚠️ Dina svar är sparade här i telefonen, men kunde inte skickas iväg just nu. Öppna din länk igen senare när du har internet, så skickas de automatiskt. Du behöver inte svara om.
+    </div>
   </div>
   <span class="skip-link" onclick="showCoachLogin()">🔒 Tränare? Logga in här</span>
 </div>
@@ -774,6 +777,10 @@ const COACH_PW = 'fotboll2025';
   const SUPABASE_URL = 'https://tmkrzulvrslzuvrxhwtm.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRta3J6dWx2cnNsenV2cnhod3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NDc0NjcsImV4cCI6MjEwNTIyMzQ2N30.4uaBf8AMiurlYTlXfIWDvf7ba4_-vZHWH87wgt2S9f4';
 const STORAGE_KEY = 'fotboll_enkät_svar';
+const KO_KEY = 'fotboll_enkät_osparade';
+const MIGRERAD_KEY = 'fotboll_enkät_migrerad_v1';
+let servern_svarade = true;
+let kon_tomms = false;
 const LEADER_KEY = 'fotboll_ledardata';
 
 function loadLeaderData() {
@@ -844,6 +851,9 @@ const lankOk = !!playerName && !!playerKod &&
 document.addEventListener('input', function (e) {
   if (e.target && e.target.classList && e.target.classList.contains('freetext')) registreraSvar();
 });
+
+migreraGamlaSvar();
+tomKon().then(n => { if (n) console.log('Skickade upp ' + n + ' sparade svar.'); });
 
 const greetingEl = document.getElementById('player-greeting');
 if (lankOk) {
@@ -959,28 +969,15 @@ async function submitSurvey() {
   A.year = new Date().getFullYear();
   A.round = getCurrentRound();
 
-  // Save to Supabase
-  let savedToServer = false;
-  try {
-    const resp = await fetch(SUPABASE_URL + '/rest/v1/svar', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ data: {...A} })
-    });
-    if (resp.ok || resp.status === 201) savedToServer = true;
-  } catch(e) { console.warn('Supabase error:', e); }
+  let komFram = false;
+  try { await skickaTillServern({...A}); komFram = true; }
+  catch (e) {
+    console.warn('Kunde inte skicka svaret:', e);
+    sparaKo(laddaKo().concat([{...A}]));
+  }
 
-  // Also save locally as backup
-  try {
-    const all = loadAll();
-    all.push({...A});
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  } catch(e) {}
+  const varning = document.getElementById('done-varning');
+  if (varning) varning.style.display = komFram ? 'none' : 'block';
 
   const dn = document.getElementById('done-namn');
   if (dn) dn.textContent = playerName ? ', ' + playerName : '';
@@ -1079,22 +1076,73 @@ function dedupe(rows) {
   return kvar;
 }
 
+function laddaKo() {
+  try { return JSON.parse(localStorage.getItem(KO_KEY)) || []; } catch (e) { return []; }
+}
+function sparaKo(kon) {
+  try { localStorage.setItem(KO_KEY, JSON.stringify(kon)); } catch (e) {}
+}
+async function skickaTillServern(svar) {
+  const resp = await fetch(SUPABASE_URL + '/rest/v1/svar', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ data: svar })
+  });
+  if (!resp.ok) throw new Error('Servern svarade ' + resp.status);
+  return true;
+}
+// Engångsflytt: svar som låg i den gamla lagringen utan att ha kommit fram.
+function migreraGamlaSvar() {
+  try {
+    if (localStorage.getItem(MIGRERAD_KEY)) return;
+    const gamla = loadAll().filter(r => r && r.timestamp);
+    if (gamla.length) sparaKo(laddaKo().concat(gamla));
+    localStorage.setItem(MIGRERAD_KEY, new Date().toISOString());
+  } catch (e) {}
+}
+// Skickar upp allt som väntar. Det som inte går fram ligger kvar och försöker igen nästa gång.
+async function tomKon() {
+  if (kon_tomms) return 0;
+  const kon = laddaKo();
+  if (!kon.length) return 0;
+  kon_tomms = true;
+  try {
+    return await tomKonInre(kon);
+  } finally { kon_tomms = false; }
+}
+async function tomKonInre(kon) {
+  const kvar = [];
+  let skickade = 0;
+  for (const svar of kon) {
+    try { await skickaTillServern(svar); skickade++; }
+    catch (e) { kvar.push(svar); }
+  }
+  sparaKo(kvar);
+  return skickade;
+}
+
 function loadAll() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
 }
 
 async function loadAllFromServer() {
   try {
-    const resp = await fetch(SUPABASE_URL + '/rest/v1/svar?select=data,created_at&order=created_at.asc', {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/svar?select=id,data,created_at&order=created_at.asc', {
       headers: {
         'apikey': SUPABASE_KEY,
         'Authorization': 'Bearer ' + SUPABASE_KEY
       }
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) { servern_svarade = false; return null; }
     const rows = await resp.json();
-    return rows.map(r => Object.assign({}, r.data, { _id: r.id }));
-  } catch(e) { return null; }
+    servern_svarade = true;
+    return rows.filter(r => r && r.data).map(r => Object.assign({}, r.data, { _id: r.id }));
+  } catch(e) { servern_svarade = false; return null; }
 }
 async function raderaFranServern(ids) {
   const rena = ids.filter(v => v !== undefined && v !== null);
@@ -1141,7 +1189,7 @@ async function uppdateraDash() {
 
 async function renderDash() {
   const serverData = await loadAllFromServer();
-  if (serverData) {
+  if (Array.isArray(serverData)) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serverData)); } catch(e) {}
   }
   const rader = loadAll();
@@ -1154,7 +1202,9 @@ async function renderDash() {
   }
   if (!all.length) {
     document.getElementById('year-tabs').innerHTML = '';
-    document.getElementById('dash-content').innerHTML = '<div class="no-data">Inga svar ännu. Dela enkäten med spelarna! ⚽</div>';
+    document.getElementById('dash-content').innerHTML = servern_svarade
+      ? '<div class="no-data">Inga svar ännu. Dela enkäten med spelarna! ⚽</div>'
+      : '<div class="no-data" style="background:#fff9e6;border:1.5px solid #f0d98a;color:#7a5c00;">⚠️ Kunde inte hämta svaren från servern. Det betyder inte att de är borta. Kontrollera nätet och tryck Uppdatera.</div>';
     return;
   }
   const years = [...new Set(all.map(r => r.year || new Date(r.timestamp).getFullYear()))].sort((a,b)=>b-a);
