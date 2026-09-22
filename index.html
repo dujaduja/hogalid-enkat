@@ -163,6 +163,10 @@ transition: border-color 0.2s, background 0.2s;
 .player-table td { padding:10px 10px; border-bottom:1px solid #f5f5f5; font-weight:600; vertical-align:top; }
 .player-table tr:last-child td { border-bottom:none; }
 .player-table tr:hover td { background:#f5f8fd; }
+.player-table th.sorterbar { cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; white-space:nowrap; }
+.player-table th.sorterbar:hover { color:var(--green-dark); }
+.player-table th.sorterad { color:var(--green-dark); }
+.sortpil { font-size:10px; margin-left:3px; }
 .score-pill { display:inline-block; padding:2px 10px; border-radius:99px; font-size:12px; font-weight:700; }
 .score-5 { background:#dde6f4; color:#071d49; }
 .score-4 { background:#eaf0f9; color:#071d49; }
@@ -1503,15 +1507,61 @@ function singleFreqSection(data, key, title) {
   return chipFreqSection(data, key, title);
 }
 
+// Sortering i individtabellen. Första klicket lägst först, andra högst först.
+// Spelare som saknar värde hamnar alltid sist, åt båda hållen.
+let sortKolumn = null;
+let sortHogstForst = false;
+let spelarData = [];
+const SORT_KOLUMNER = [
+  { nyckel: 'namn', rubrik: 'Namn' },
+  { nyckel: 'tid', rubrik: 'Tid' },
+  { nyckel: 'wi', rubrik: 'Trivselindex' },
+  { nyckel: 'q1', rubrik: 'Glädje' },
+  { nyckel: 'q3', rubrik: 'Tillhörighet' },
+  { nyckel: 'q4', rubrik: 'Trygghet' },
+  { nyckel: 'q5', rubrik: 'Förbättring' },
+  { nyckel: 'q7', rubrik: 'Delaktighet' },
+  { nyckel: 'q11', rubrik: 'Fortsätta' },
+];
+function sortVarde(r, nyckel) {
+  if (nyckel === 'namn') return r.name ? String(r.name) : null;
+  if (nyckel === 'tid') return typeof r.sekunder === 'number' ? r.sekunder : null;
+  if (nyckel === 'wi') { const w = wellbeingIndex(r); return w ? parseFloat(w) : null; }
+  const v = Number(r[nyckel]);
+  return r[nyckel] && !isNaN(v) ? v : null;
+}
+function sorteraSpelare(nyckel) {
+  if (sortKolumn === nyckel) sortHogstForst = !sortHogstForst;
+  else { sortKolumn = nyckel; sortHogstForst = false; }
+  const flik = document.getElementById('tab-players');
+  if (flik) flik.innerHTML = renderPlayersTab(spelarData);
+}
+
 function renderPlayersTab(data) {
+  spelarData = data;
+  let rader = data.slice();
+  if (sortKolumn) {
+    rader.sort((a, b) => {
+      const va = sortVarde(a, sortKolumn), vb = sortVarde(b, sortKolumn);
+      if (va === null && vb === null) return 0;
+      if (va === null) return 1;
+      if (vb === null) return -1;
+      const jmf = typeof va === 'string' ? va.localeCompare(vb, 'sv') : va - vb;
+      return sortHogstForst ? -jmf : jmf;
+    });
+  }
   const scaleEmoji = {1:'😩',2:'😕',3:'😊',4:'🤩'};
   const pillClass = v => `score-pill score-${v||''}`;
   let html = `<div class="dash-section"><h3>👤 Individuella svar</h3>
     <table class="player-table">
       <thead><tr>
-        <th>Namn</th><th>Tid</th><th>Trivselindex</th><th>Glädje</th><th>Tillhörighet</th><th>Trygghet</th><th>Förbättring</th><th>Delaktighet</th><th>Fortsätta</th>
+        ${SORT_KOLUMNER.map(k => {
+          const aktiv = sortKolumn === k.nyckel;
+          const pil = aktiv ? '<span class="sortpil">' + (sortHogstForst ? '▼' : '▲') + '</span>' : '';
+          return '<th class="sorterbar' + (aktiv ? ' sorterad' : '') + '" onclick="sorteraSpelare(\'' + k.nyckel + '\')">' + k.rubrik + pil + '</th>';
+        }).join('')}
       </tr></thead><tbody>`;
-  data.forEach(r => {
+  rader.forEach(r => {
     const name = r.name || '(okänd)';
     const date = r.timestamp ? new Date(r.timestamp).toLocaleDateString('sv-SE') : '';
     const wi = wellbeingIndex(r);
