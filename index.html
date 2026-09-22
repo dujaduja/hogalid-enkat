@@ -181,6 +181,15 @@ transition: border-color 0.2s, background 0.2s;
 .chip-freq { display:flex; flex-wrap:wrap; gap:8px; }
 .chip-freq-item { background:#eef2fa; border:1.5px solid #c8d4e5; border-radius:99px; padding:5px 12px; font-size:12px; font-weight:700; color:var(--green-dark); }
 .chip-freq-item span { background:var(--green); color:white; border-radius:99px; padding:1px 7px; margin-left:5px; font-size:11px; }
+.chip-freq-item.klickbar { cursor:pointer; transition:all .15s; -webkit-tap-highlight-color:transparent; user-select:none; }
+.chip-freq-item.klickbar:hover { border-color:var(--green); }
+.chip-freq-item.vald { background:var(--green-dark); color:#fff; border-color:var(--green-dark); }
+.chip-freq-item.vald span { background:#fff; color:var(--green-dark); }
+.vilka { margin-top:12px; padding:12px 14px 6px; background:#f5f8fd; border-radius:12px; border-left:3px solid var(--green); }
+.vilka-rubrik { font-size:12px; font-weight:700; color:var(--muted); margin-bottom:8px; }
+.namn-pill { display:inline-block; background:#fff; border:1.5px solid #c8d4e5; border-radius:99px; padding:4px 11px; margin:0 6px 6px 0; font-size:13px; font-weight:700; color:var(--green-dark); cursor:pointer; }
+.namn-pill:hover { border-color:var(--green); }
+.klick-tips { font-size:12px; font-weight:600; color:rgba(255,255,255,0.7); margin:4px 2px 12px; }
 
 .no-data { text-align:center; color:rgba(255,255,255,0.6); font-size:14px; font-weight:600; padding:24px 0; }
 .round-badge { display:inline-block; background:#eaf0f9; color:var(--green-dark); font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; margin-left:6px; }
@@ -1440,6 +1449,7 @@ function renderGroupTab(data) {
     html += '</div></div>';
   }
 
+  html += '<div class="klick-tips">💡 Klicka på ett svar för att se vilka som valt det. Klicka på ett namn för att öppna spelarens sida.</div>';
   html += chipFreqSection(data, 'q4c', '🏃 Var känner de sig tryggast på planen?');
   html += chipFreqSection(data, 'q4d', '🤔 Var känner de sig osäkra eller vill ha stöd?');
   html += singleFreqSection(data, 'q4e', '🧤 Hur känns det att stå i mål?');
@@ -1488,18 +1498,44 @@ function npsSection(data) {
   return html + '</div>';
 }
 
+function namnPill(namn) {
+  const n = namn || '(okänd)';
+  return '<span class="namn-pill" data-namn="' + esc(n) + '" onclick="if(this.dataset.namn!==\'(okänd)\')showPlayerPage(this.dataset.namn)">' + esc(n) + '</span>';
+}
+// Klick på ett svar visar vilka som valt det. Klick igen stänger.
+function visaVilka(el, i) {
+  const sek = el.closest('.dash-section');
+  if (!sek) return;
+  const varOppen = el.classList.contains('vald');
+  sek.querySelectorAll('.vilka').forEach(l => { l.style.display = 'none'; });
+  sek.querySelectorAll('.chip-freq-item').forEach(p => p.classList.remove('vald'));
+  if (varOppen) return;
+  const lista = sek.querySelector('.vilka[data-i="' + i + '"]');
+  if (lista) lista.style.display = 'block';
+  el.classList.add('vald');
+}
 function chipFreqSection(data, key, title) {
-  const counts = {};
+  const vilka = {};
   data.forEach(r => {
     const v = r[key];
     if (!v) return;
     const arr = Array.isArray(v) ? v : [v];
-    arr.forEach(x => { counts[x] = (counts[x]||0)+1; });
+    arr.forEach(x => { (vilka[x] = vilka[x] || []).push(r.name || ''); });
   });
-  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const sorted = Object.entries(vilka).sort((a,b)=>b[1].length-a[1].length);
   if (!sorted.length) return '';
+  const knappar = sorted.map(([k,namn], i) =>
+    `<div class="chip-freq-item klickbar" onclick="visaVilka(this, ${i})">${esc(k)}<span>${namn.length}</span></div>`).join('');
+  const listor = sorted.map(([k,namn], i) => {
+    const ordnade = namn.slice().sort((a,b) => (a||'￿').localeCompare(b||'￿', 'sv'));
+    return `<div class="vilka" data-i="${i}" style="display:none;">
+      <div class="vilka-rubrik">${esc(k)} · ${namn.length} spelare</div>
+      ${ordnade.map(namnPill).join('')}
+    </div>`;
+  }).join('');
   return `<div class="dash-section"><h3>${title}</h3>
-    <div class="chip-freq">${sorted.map(([k,v])=>`<div class="chip-freq-item">${k}<span>${v}</span></div>`).join('')}</div>
+    <div class="chip-freq">${knappar}</div>
+    ${listor}
   </div>`;
 }
 
