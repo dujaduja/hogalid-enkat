@@ -200,10 +200,22 @@ transition: border-color 0.2s, background 0.2s;
 .tab-pane { display:none; }
 .tab-pane.active { display:block; }
 
+#utskrift { display:none; }
+.btn-skrivut { margin-top:14px; background:#eef2fa; border:1.5px solid #c8d4e5; color:var(--green-dark); font-family:'Quicksand',sans-serif; font-size:12px; font-weight:700; padding:7px 14px; border-radius:99px; cursor:pointer; }
+.btn-skrivut:hover { border-color:var(--green); }
+
 @media print {
-  #player-page .no-print { display:none !important; }
-  #player-page .pp-header { background:#071d49 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-  body > *:not(#player-page) { display:none !important; }
+  /* Utskrift av ett fritextblock, utan namn */
+  body.skriver-ut > *:not(#utskrift) { display:none !important; }
+  body.skriver-ut #utskrift { display:block !important; padding:0; }
+  #utskrift h1 { font-family:'Quicksand',sans-serif; font-size:19px; color:#000; margin-bottom:4px; }
+  #utskrift .utskrift-info { font-size:11px; color:#555; margin-bottom:18px; }
+  #utskrift .utskrift-svar { font-family:'Quicksand',sans-serif; font-size:14px; line-height:1.55; color:#000; white-space:pre-wrap; overflow-wrap:anywhere; padding:9px 0 9px 12px; border-left:2px solid #999; margin-bottom:10px; break-inside:avoid; page-break-inside:avoid; }
+
+  /* Spelarrapport, som tidigare */
+  body:not(.skriver-ut) #player-page .no-print { display:none !important; }
+  body:not(.skriver-ut) #player-page .pp-header { background:#071d49 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body:not(.skriver-ut) > *:not(#player-page) { display:none !important; }
 }
 
     .nps-row { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin:12px 0 4px; }
@@ -1845,6 +1857,36 @@ function showPlayerPage(name) {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+// Skriver ut ett fritextblock med bara svaren. Namnen följer inte med.
+function skrivUtFritext(knapp) {
+  const sek = knapp.closest('.dash-section');
+  if (!sek) return;
+  const h3 = sek.querySelector('h3');
+  const rubrik = h3 ? h3.textContent.trim() : 'Fritextsvar';
+  const texter = [];
+  sek.querySelectorAll('.freetext-list li').forEach(li => {
+    const kopia = li.cloneNode(true);
+    const namn = kopia.querySelector('.ft-name');
+    if (namn) namn.remove();
+    const t = kopia.textContent.trim();
+    if (t) texter.push(t);
+  });
+  if (!texter.length) return;
+  let ut = document.getElementById('utskrift');
+  if (!ut) { ut = document.createElement('div'); ut.id = 'utskrift'; document.body.appendChild(ut); }
+  ut.innerHTML = '<h1>' + esc(rubrik) + '</h1>' +
+    '<div class="utskrift-info">Fotbollsenkät ' + activeYear + ' · ' + texter.length + ' svar · anonymiserad utskrift</div>' +
+    texter.map(t => '<div class="utskrift-svar">' + esc(t) + '</div>').join('');
+  document.body.classList.add('skriver-ut');
+  const rensa = () => {
+    document.body.classList.remove('skriver-ut');
+    window.removeEventListener('afterprint', rensa);
+  };
+  window.addEventListener('afterprint', rensa);
+  window.print();
+  setTimeout(rensa, 2000);
+}
+
 function renderFreetextTab(data) {
   const ftSections = [
     {key:'ft_12c', title:'🤝 Vad alla i laget ska lova varandra'},
@@ -1866,7 +1908,7 @@ function renderFreetextTab(data) {
     entries.forEach(r => {
       html += `<li><div class="ft-name">${esc(r.name||'(okänd)')}</div>${esc(r[key])}</li>`;
     });
-    html += '</ul></div>';
+    html += `</ul><button class="btn-skrivut" onclick="skrivUtFritext(this)">🖨️ Skriv ut utan namn</button></div>`;
   });
   return html || '<div class="no-data">Inga fritexter inlämnade ännu.</div>';
 }
