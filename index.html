@@ -210,10 +210,12 @@ transition: border-color 0.2s, background 0.2s;
   body.skriver-ut, body.skriver-ut #utskrift { background:#fff !important; }
   body.skriver-ut > *:not(#utskrift) { display:none !important; }
   body.skriver-ut #utskrift { display:block !important; padding:0; font-family:'Quicksand',sans-serif; color:#071d49; }
-  #utskrift .ut-topp { display:flex; align-items:center; gap:16px; margin-bottom:12px; }
-  #utskrift .ut-skold { height:62px; width:auto; }
-  #utskrift .ut-ordbild { height:34px; width:auto; }
-  #utskrift .ut-vardeord { display:inline-block; background:#071d49; color:#f5c800; font-weight:700; font-size:11px; letter-spacing:2.2px; text-transform:uppercase; padding:7px 16px; border-radius:99px; margin-bottom:22px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  #utskrift .ut-topp { text-align:center; margin-bottom:10px; }
+  #utskrift .ut-skold { height:78px; width:auto; }
+  #utskrift .ut-vardeord-rad { text-align:center; margin-bottom:26px; }
+  #utskrift .ut-vardeord { display:inline-block; background:#071d49; color:#f5c800; font-weight:700; font-size:11px; letter-spacing:2.2px; text-transform:uppercase; padding:7px 16px; border-radius:99px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  #utskrift .ut-botten { text-align:center; margin-top:14px; }
+  #utskrift .ut-ordbild { height:32px; width:auto; }
   #utskrift h1 { font-family:'Fredoka One',cursive; font-weight:400; font-size:25px; line-height:1.25; color:#071d49; margin:0 0 5px; }
   #utskrift .utskrift-info { font-size:11px; font-weight:600; color:#5a6a80; margin-bottom:22px; }
   #utskrift .utskrift-svar { position:relative; background:#f2f6fc; border-radius:14px; border-left:5px solid #071d49; padding:13px 16px 13px 42px; margin-bottom:11px; font-size:14px; font-weight:600; line-height:1.55; color:#071d49; white-space:pre-wrap; overflow-wrap:anywhere; break-inside:avoid; page-break-inside:avoid; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -1890,12 +1892,13 @@ function skrivUtFritext(knapp) {
   let ut = document.getElementById('utskrift');
   if (!ut) { ut = document.createElement('div'); ut.id = 'utskrift'; document.body.appendChild(ut); }
   ut.innerHTML =
-    '<div class="ut-topp"><img class="ut-skold" src="' + LOGGA_SKOLD + '" alt=""><img class="ut-ordbild" src="' + LOGGA_ORD + '" alt=""></div>' +
-    '<div class="ut-vardeord">Kamratskap · Öppenhet · Engagemang</div>' +
+    '<div class="ut-topp"><img class="ut-skold" src="' + LOGGA_SKOLD + '" alt=""></div>' +
+    '<div class="ut-vardeord-rad"><span class="ut-vardeord">Kamratskap · Öppenhet · Engagemang</span></div>' +
     '<h1>' + esc(rubrik) + '</h1>' +
     '<div class="utskrift-info">Fotbollsenkäten ' + activeYear + ' · ' + texter.length + ' svar från laget · inga namn</div>' +
     texter.map((t, i) => '<div class="utskrift-svar ut-f' + (i % 3) + '">' + esc(t) + '</div>').join('') +
-    '<div class="ut-fot">Högalids IF · F15</div>';
+    '<div class="ut-fot">Högalids IF · F15</div>' +
+    '<div class="ut-botten"><img class="ut-ordbild" src="' + LOGGA_ORD + '" alt=""></div>';
   document.body.classList.add('skriver-ut');
   const rensa = () => {
     document.body.classList.remove('skriver-ut');
